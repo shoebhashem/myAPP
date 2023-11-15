@@ -2,7 +2,7 @@
 # --------------------
 # - Deployment to launch one container of shoebhashem/userapi:v4 in a pod.
 # - Service (type: LoadBalancer) to open up the app to the world (localhost, at least).
-# 
+#
 ---
 apiVersion: v1
 kind: Secret
@@ -10,7 +10,7 @@ metadata:
   name: session-secret
 type: Opaque
 data:
-  SESSION_SECRET: cmFuZG9tLXNlY3JldC1rZXk= 
+  SESSION_SECRET: cmFuZG9tLXNlY3JldC1rZXk=
 ---
 apiVersion: v1
 kind: Service
@@ -19,13 +19,13 @@ metadata:
   labels:
     app: userapi
 spec:
-  type: NodePort
+  type: LoadBalancer
   ports:
-  - name: http
-    port: 5005
-    targetPort: 5005
-    #NodePort: 30001
-    protocol: TCP
+    - name: http
+      port: 5005
+      targetPort: 5005
+      #NodePort: 30001
+      protocol: TCP
   selector:
     app: userapi
 ---
@@ -46,27 +46,27 @@ spec:
         app: userapi
     spec:
       containers:
-      - name: userapi
-        image: shoebhashem/userapi:v14
-        ports:
-        - containerPort: 5005
-        env:
-        - name: SESSION_SECRET
-          valueFrom:
-            secretKeyRef:
-              name: session-secret
-              key: SESSION_SECRET 
+        - name: userapi
+          image: shoebhashem/userapi:v14
+          ports:
+            - containerPort: 5005
+          env:
+            - name: SESSION_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: session-secret
+                  key: SESSION_SECRET
 
-        - name: APPSTORE_HOST
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: appstore_host
-        - name: MOVIE_API_URL 
-          valueFrom: 
-            configMapKeyRef:
-              name: app-config
-              key: movie_api_url
+            - name: APPSTORE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: appstore_host
+            - name: MOVIE_API_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: movie_api_url
 ---
 apiVersion: v1
 kind: Service
@@ -77,11 +77,11 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-  - name: http
-    port: 5004
-    targetPort: 5004
-    #NodePort: 30001
-    protocol: TCP
+    - name: http
+      port: 5004
+      targetPort: 5004
+      #NodePort: 30001
+      protocol: TCP
   selector:
     app: movieapi
 ---
@@ -102,16 +102,16 @@ spec:
         app: movieapi
     spec:
       containers:
-      - name: movieapi
-        image: shoebhashem/movieapi:v5
-        ports:
-        - containerPort: 5004
-        env:
-        - name: APPSTORE_HOST
-          valueFrom:
-            configMapKeyRef:
-              name: app-config
-              key: appstore_host
+        - name: movieapi
+          image: shoebhashem/movieapi:v5
+          ports:
+            - containerPort: 5004
+          env:
+            - name: APPSTORE_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: app-config
+                  key: appstore_host
 ---
 
 ---
@@ -129,8 +129,8 @@ metadata:
     app: appstore
 spec:
   ports:
-  - port: 27017
-    targetPort: mongodb-port
+    - port: 27017
+      targetPort: mongodb-port
   selector:
     app: appstore
 ---
@@ -152,16 +152,16 @@ spec:
         app: appstore
     spec:
       containers:
-      - name: appstore
-        image: mongo
-        ports:
-        - containerPort: 27017
-          name: mongodb-port
-        volumeMounts:
-        - name: appstore-data
-          mountPath: /data/db
-        - name: mongo-config
-          mountPath: /data/configdb
+        - name: appstore
+          image: mongo
+          ports:
+            - containerPort: 27017
+              name: mongodb-port
+          volumeMounts:
+            - name: appstore-data
+              mountPath: /data/db
+            - name: mongo-config
+              mountPath: /data/configdb
   volumeClaimTemplates:
     - metadata:
         name: appstore-data
